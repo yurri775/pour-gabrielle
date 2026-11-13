@@ -1,0 +1,237 @@
+<title>Pour Gabrielle</title>
+<style>
+  /* Ciel 3D (WebGL) : une couronne d'étoiles se trace en profondeur, la caméra avance, le prénom et la lettre se révèlent. Grain + vignette pour la texture cinéma. */
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Great+Vibes&display=swap');
+  :root{
+    --ink:#05060c;--cream:#efe6d6;--gold:#e9c784;--gold-soft:#caa968;--muted:#8a8498;
+    --ease:cubic-bezier(.32,.72,0,1);
+    --font-letter:'Cormorant Garamond', Georgia, serif;--font-script:'Great Vibes', cursive;
+    color-scheme:dark;
+  }
+  html,body{height:100%;margin:0}
+  body{background:var(--ink);color:var(--cream);font-family:var(--font-letter);overflow:hidden;position:fixed;inset:0}
+  #sky{position:fixed;inset:0;z-index:0;display:block}
+  body::before{content:"";position:fixed;inset:0;z-index:2;pointer-events:none;mix-blend-mode:overlay;opacity:.05;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+  body::after{content:"";position:fixed;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 34%, transparent 44%, rgba(3,4,9,.8) 100%)}
+
+  .stage{position:fixed;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    text-align:center;padding:clamp(40px,46vh,520px) 26px max(28px,env(safe-area-inset-bottom,0px));pointer-events:none}
+  .name{font-family:var(--font-script);font-size:clamp(3.6rem,16vw,7.2rem);line-height:.9;color:var(--gold);
+    text-shadow:0 0 40px rgba(233,199,132,.5),0 0 10px rgba(233,199,132,.45);
+    opacity:0;transform:translateY(10px) scale(.97);filter:blur(10px);
+    transition:opacity 2.4s var(--ease),transform 2.4s var(--ease),filter 2.4s var(--ease)}
+  .name.show{opacity:1;transform:none;filter:blur(0)}
+  .name{color:transparent;-webkit-text-fill-color:transparent;background-image:linear-gradient(100deg,#caa968,#ffe9b8 25%,#e9c784 50%,#caa968 75%);background-size:220% auto;-webkit-background-clip:text;background-clip:text}
+  .name.show{animation:sheen 6.5s linear infinite}
+  @keyframes sheen{to{background-position:220% center}}
+  .eyebrow{margin-top:1.1em;font-size:clamp(.62rem,2.6vw,.78rem);letter-spacing:.42em;text-transform:uppercase;color:var(--gold-soft);
+    opacity:0;transition:opacity 2s var(--ease)}
+  .eyebrow.show{opacity:.85}
+  #letter{max-width:34rem;width:100%;margin-top:clamp(1.6rem,5vh,3rem);display:flex;flex-direction:column;gap:.1em}
+  #letter .line{font-size:clamp(1.2rem,4.8vw,1.7rem);line-height:1.5;color:var(--cream);
+    opacity:0;transform:translateY(16px);filter:blur(7px);
+    transition:opacity 1.9s var(--ease),transform 1.9s var(--ease),filter 1.9s var(--ease);text-wrap:balance}
+  #letter .line.em{font-style:italic;color:#e9dcc6}
+  #letter .line.gold{color:var(--gold);font-style:italic}
+  #letter .line.sign{font-size:clamp(.95rem,3.4vw,1.15rem);color:var(--muted);font-style:italic;margin-top:.9em}
+  #letter .line.show{opacity:1;transform:none;filter:blur(0)}
+
+  #start{position:fixed;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;
+    text-align:center;padding:26px;background:radial-gradient(120% 90% at 50% 44%,rgba(30,22,40,.35),rgba(5,6,12,.96) 72%);
+    transition:opacity 1.6s var(--ease)}
+  #start.hide{opacity:0;pointer-events:none}
+  #start .pre{font-style:italic;color:#efe6d6cc;font-size:clamp(1.05rem,4.4vw,1.5rem);max-width:24rem;line-height:1.5}
+  #start .go{display:inline-flex;align-items:center;gap:.8em;cursor:pointer;
+    font-family:var(--font-letter);font-weight:500;letter-spacing:.14em;text-transform:uppercase;font-size:clamp(.82rem,3.4vw,.95rem);
+    color:#efe6d6;background:rgba(233,199,132,.06);border:1px solid rgba(233,199,132,.35);
+    padding:14px 16px 14px 26px;border-radius:999px;transition:transform .6s var(--ease),background .6s var(--ease),border-color .6s var(--ease)}
+  .go .orb{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
+    background:linear-gradient(140deg,#f3dca2,var(--gold));color:#2a1d0c;font-size:1rem;transition:transform .6s var(--ease)}
+  #start .go:hover{transform:translateY(-2px);background:rgba(233,199,132,.12);border-color:rgba(233,199,132,.6)}
+  #start .go:hover .orb{transform:translateX(3px) scale(1.06)}
+  #start .go:active{transform:scale(.98)}
+  #start .go:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+  #start .sub{color:#ffffff6e;font-size:.78rem;letter-spacing:.1em}
+  #replay{position:fixed;z-index:4;left:0;right:0;bottom:max(22px,env(safe-area-inset-bottom,0px));text-align:center;opacity:0;transition:opacity 1.6s var(--ease)}
+  #replay.show{opacity:1}
+  #replay button{background:none;border:1px solid rgba(233,199,132,.3);color:var(--gold);font-family:var(--font-letter);
+    font-size:.9rem;letter-spacing:.14em;text-transform:uppercase;padding:9px 22px;border-radius:999px;cursor:pointer;transition:background .5s var(--ease)}
+  #replay button:hover{background:rgba(233,199,132,.1)}
+  @media (prefers-reduced-motion:reduce){.name,.eyebrow,#letter .line{transition:opacity .4s ease;filter:none;transform:none}}
+</style>
+
+<canvas id="sky"></canvas>
+<div class="stage">
+  <div class="name" id="nm">Gabrielle</div>
+  <div class="eyebrow" id="eb">sa constellation · le 14 novembre</div>
+  <div id="letter"></div>
+</div>
+<div id="replay"><button id="replayBtn">la revoir</button></div>
+<div id="start">
+  <div class="pre">Gabrielle… lève les yeux un instant.</div>
+  <button class="go" id="goBtn"><span>ouvrir</span><span class="orb">✦</span></button>
+  <div class="sub">🔊 son activé · installe-toi</div>
+</div>
+
+<script type="importmap">
+{ "imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+/* ===== TES MOTS — remplace par ta vraie lettre ===== */
+const LETTER=[
+  { text:"Gabrielle," },
+  { text:"j'ai cherché ta place dans le ciel…", cls:"em" },
+  { text:"et j'ai trouvé une couronne." },
+  { text:"Forcément. Une princesse, ça se reconnaît. 👑", cls:"gold" },
+  { text:"Joyeux anniversaire, ma belle." },
+  { text:"— rien que pour toi", cls:"sign" }
+];
+
+const canvas=document.getElementById('sky');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x05060c);
+scene.fog=new THREE.FogExp2(0x05060c,0.0032);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,2000);
+camera.position.set(0,10,120);
+const look=new THREE.Vector3(0,12,0);
+
+// disc texture
+function disc(){const s=64,c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d');
+  const gr=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);gr.addColorStop(0,'#fff');gr.addColorStop(.35,'rgba(255,255,255,.85)');gr.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=gr;x.beginPath();x.arc(s/2,s/2,s/2,0,6.28);x.fill();return new THREE.CanvasTexture(c);}
+const sprite=disc();
+
+// starfields (2 couches pour la parallaxe)
+function starLayer(n,spread,depth,size,col,op){
+  const geo=new THREE.BufferGeometry();const pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){pos[i*3]=(Math.random()-.5)*spread;pos[i*3+1]=(Math.random()-.5)*spread*0.7+12;pos[i*3+2]=-depth-Math.random()*depth;}
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const m=new THREE.PointsMaterial({size,map:sprite,color:col,transparent:true,opacity:op,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+  const p=new THREE.Points(geo,m);scene.add(p);return p;
+}
+const farStars=starLayer(1300,520,180,1.4,0xaeb4d8,0.85);
+const nearStars=starLayer(380,320,60,2.2,0xdfe6ff,0.95);
+// nebuleuses colorees (profondeur + couleur)
+function nebula(hex,x,y,z,sc,op){const s=256,c=document.createElement('canvas');c.width=c.height=s;const g2=c.getContext('2d');const gr=g2.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);gr.addColorStop(0,hex+'cc');gr.addColorStop(.45,hex+'3a');gr.addColorStop(1,hex+'00');g2.fillStyle=gr;g2.fillRect(0,0,s,s);const m=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,opacity:op,depthWrite:false,blending:THREE.AdditiveBlending});const sp=new THREE.Sprite(m);sp.position.set(x,y,z);sp.scale.setScalar(sc);scene.add(sp);return sp;}
+const nebulas=[nebula('#6a4bd6',-140,40,-260,420,.3),nebula('#d6568f',150,-10,-300,460,.26),nebula('#e0a24e',20,70,-240,360,.24)];
+// poussiere d'or (premier plan)
+const dustGeo=new THREE.BufferGeometry();const DUST=140;const dpos=new Float32Array(DUST*3);
+for(let i=0;i<DUST;i++){dpos[i*3]=(Math.random()-.5)*170;dpos[i*3+1]=(Math.random()-.5)*110+12;dpos[i*3+2]=20+Math.random()*70;}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dpos,3));
+const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({size:1.1,map:sprite,color:0xe9c784,transparent:true,opacity:.55,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true}));scene.add(dust);
+
+// couronne 3D
+const CROWN=[[-0.95,0.28,0],[-0.62,-0.42,2.2],[-0.33,0.06,0],[0,-0.62,3.4],[0.33,0.06,0],[0.62,-0.42,2.2],[0.95,0.28,0]];
+const S=34, CY=12;
+const crownGroup=new THREE.Group();scene.add(crownGroup);
+const base=CROWN.map(p=>new THREE.Vector3(p[0]*S,CY+ -p[1]*S, p[2]));
+// ligne lissée (subdivision) pour un tracé progressif fluide
+const smooth=[];const SUB=44;
+for(let i=0;i<base.length-1;i++){for(let k=0;k<SUB;k++){const t=k/SUB;smooth.push(base[i].clone().lerp(base[i+1],t));}}
+smooth.push(base[base.length-1].clone());
+const lineGeo=new THREE.BufferGeometry().setFromPoints(smooth);
+const lineMat=new THREE.LineBasicMaterial({color:0xe9c784,transparent:true,opacity:0.9,blending:THREE.AdditiveBlending,depthWrite:false});
+const crownLine=new THREE.Line(lineGeo,lineMat);crownLine.geometry.setDrawRange(0,0);crownGroup.add(crownLine);
+// noeuds + joyaux
+const nodeGeo=new THREE.BufferGeometry().setFromPoints(base);
+const nodeMat=new THREE.PointsMaterial({size:3.4,map:sprite,color:0xfff1d6,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+const nodes=new THREE.Points(nodeGeo,nodeMat);crownGroup.add(nodes);
+const jewels=[base[1],base[3],base[5]];
+const jewGeo=new THREE.BufferGeometry().setFromPoints(jewels);
+const jewMat=new THREE.PointsMaterial({size:6.5,map:sprite,color:0xffe6b0,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+const jew=new THREE.Points(jewGeo,jewMat);crownGroup.add(jew);
+
+// bloom
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),1.25,0.75,0.0);
+composer.addPass(bloom);
+composer.setSize(innerWidth,innerHeight);
+
+// etoiles filantes
+const shooters=[];
+function spawnShooter(){const geo=new THREE.BufferGeometry();const head=new THREE.Vector3((Math.random()-.15)*170,40+Math.random()*34,-30-Math.random()*70);const dir=new THREE.Vector3(-1-Math.random(),-0.5-Math.random()*0.4,0).normalize();const tail=head.clone().addScaledVector(dir,-20);geo.setFromPoints([tail,head]);const mat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false});const line=new THREE.Line(geo,mat);scene.add(line);shooters.push({line,head,dir,life:0,dur:1.1+Math.random()*0.5,speed:95+Math.random()*60});}
+let nextShoot=2.5;
+function updateShooters(dt){nextShoot-=dt;if(nextShoot<=0&&started){spawnShooter();nextShoot=3+Math.random()*4.5;}for(let i=shooters.length-1;i>=0;i--){const s=shooters[i];s.life+=dt;const k=s.life/s.dur;s.line.material.opacity=k<.2?k/.2:Math.max(0,1-(k-.2)/.8);s.head.addScaledVector(s.dir,s.speed*dt);const tail=s.head.clone().addScaledVector(s.dir,-20);s.line.geometry.setFromPoints([tail,s.head]);if(s.life>=s.dur){scene.remove(s.line);s.line.geometry.dispose();s.line.material.dispose();shooters.splice(i,1);}}}
+// parallaxe pointeur
+let px=0,py=0,tx=0,ty=0;
+addEventListener('pointermove',e=>{tx=(e.clientX/innerWidth-.5);ty=(e.clientY/innerHeight-.5);},{passive:true});
+
+// musique
+let actx=null,musicOn=false;
+function bell(f,st,dur=2.6,vol=.11){const o=actx.createOscillator(),o2=actx.createOscillator(),gg=actx.createGain(),g2=actx.createGain();
+  o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.01;
+  gg.gain.setValueAtTime(0,st);gg.gain.linearRampToValueAtTime(vol,st+.03);gg.gain.exponentialRampToValueAtTime(.0001,st+dur);
+  g2.gain.value=.28;o2.connect(g2);g2.connect(gg);o.connect(gg);gg.connect(actx.destination);o.start(st);o2.start(st);o.stop(st+dur+.1);o2.stop(st+dur+.1);}
+const MEL=[523.25,659.25,783.99,659.25,587.33,698.46,587.33,523.25];
+function music(){if(!actx||!musicOn)return;let t=actx.currentTime+.1;const s=1.15;MEL.forEach((f,i)=>bell(f,t+i*s,2.6,.1));setTimeout(music,(MEL.length*s+1.4)*1000);}
+function ping(){if(actx)bell(880+Math.random()*140,actx.currentTime+.01,1.8,.055);}
+
+// lettre
+const box=document.getElementById('letter');let timer;
+function reveal(){
+  box.innerHTML='';document.getElementById('replay').classList.remove('show');
+  document.getElementById('nm').classList.remove('show');document.getElementById('eb').classList.remove('show');
+  const ns=LETTER.map(it=>{const el=document.createElement('div');el.className='line'+(it.cls?' '+it.cls:'');el.textContent=it.text;box.appendChild(el);return el;});
+  setTimeout(()=>document.getElementById('nm').classList.add('show'),3500);
+  setTimeout(()=>{document.getElementById('eb').classList.add('show');ping();},4000);
+  let i=0;function next(){if(i>=ns.length){document.getElementById('replay').classList.add('show');return;}ns[i].classList.add('show');ping();i++;timer=setTimeout(next,2600);}
+  clearTimeout(timer);timer=setTimeout(next,4700);
+}
+
+let started=false,startAt=0;
+function begin(){try{actx=new (AudioContext||webkitAudioContext)();musicOn=true;music();}catch(e){}
+  started=true;startAt=performance.now();
+  const s=document.getElementById('start');s.classList.add('hide');setTimeout(()=>s.remove(),1700);reveal();}
+document.getElementById('goBtn').addEventListener('click',begin);
+document.getElementById('replayBtn').addEventListener('click',()=>{started=true;startAt=performance.now();reveal();});
+
+const clock=new THREE.Clock();
+const total=smooth.length;
+function ease(t){return t<0?0:t>1?1:1-Math.pow(1-t,3);}
+function frame(){
+  requestAnimationFrame(frame);
+  const dt=clock.getDelta(); const t=clock.elapsedTime;
+  farStars.rotation.z=t*0.006; nearStars.rotation.z=t*0.012;
+  dust.rotation.y=t*0.02; dust.position.y=Math.sin(t*0.2)*2;
+  nebulas.forEach((nb,i)=>{nb.material.opacity=0.22+0.08*Math.sin(t*0.3+i);});
+  updateShooters(dt);
+  crownGroup.rotation.z=Math.sin(t*0.3)*0.02; crownGroup.rotation.y=Math.sin(t*0.22)*0.05;
+
+  // parallaxe douce
+  px+=(tx-px)*0.04; py+=(ty-py)*0.04;
+  let camZ=120;
+  if(started){
+    const e=(performance.now()-startAt)/1000;
+    const dolly=ease(Math.min(1,e/3.2)); camZ=120-28*dolly;
+    const p=ease(Math.min(1,Math.max(0,(e-0.7)/2.6)));
+    crownLine.geometry.setDrawRange(0,Math.floor(p*total));
+    nodeMat.opacity=p*0.95; jewMat.opacity=p;
+  }
+  if(reduce && started){ crownLine.geometry.setDrawRange(0,total); nodeMat.opacity=.95; jewMat.opacity=1; }
+  camera.position.x+=((px*26)-camera.position.x)*0.05;
+  camera.position.y+=((10 - py*16)-camera.position.y)*0.05;
+  camera.position.z+=(camZ-camera.position.z)*0.05;
+  camera.lookAt(look);
+  composer.render();
+}
+frame();
+
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);bloom.setSize(innerWidth,innerHeight);});
+</script>
